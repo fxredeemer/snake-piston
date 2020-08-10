@@ -19,6 +19,8 @@ extern crate opengl_graphics;
 extern crate piston;
 extern crate piston_window;
 extern crate rand;
+extern crate find_folder;
+extern crate gfx_device_gl;
 
 use std::collections::VecDeque;
 
@@ -29,6 +31,7 @@ use piston::input::UpdateEvent;
 use piston_window::G2d;
 use piston_window::WindowSettings;
 use piston_window::*;
+use piston_window::Glyphs;
 use rand::Rng;
 
 const BOARD_WIDTH: i8 = 15;
@@ -345,25 +348,36 @@ impl Game {
         }
     }
 
-    fn render(&mut self, t: math::Matrix2d, gfx: &mut G2d) {
+    fn render(&mut self, context: Context, gfx: &mut G2d, glyphs: &mut Glyphs) {
+        let transform = context.transform;
+        
         if self.state == State::GameOver {
-            clear(color::hex("330011"), gfx);
+            clear(color::hex("220011"), gfx);
+
+            text::Text::new_color(color::hex("11AAFF"), 32).draw(
+                "Game Over! Press 'R' to restart",
+                glyphs,
+                &context.draw_state,
+                context.transform.trans(10.0, 100.0),
+                gfx
+            ).unwrap();
+
             return;
         }
 
         clear(color::hex("001122"), gfx);
 
-        for ref mut f in &self.food {
-            f.render(t, gfx);
+        for ref mut food in &self.food {
+            food.render(transform, gfx);
         }
 
-        self.snake.render(t, gfx);
+        self.snake.render(transform, gfx);
 
-        for w in &self.walls {
+        for walls in &self.walls {
             rectangle(
                 color::hex("002951"),
-                rectangle::square(w.x as f64 * TILE_SIZE, w.y as f64 * TILE_SIZE, TILE_SIZE),
-                t,
+                rectangle::square(walls.x as f64 * TILE_SIZE, walls.y as f64 * TILE_SIZE, TILE_SIZE),
+                transform,
                 gfx,
             );
         }
@@ -421,11 +435,18 @@ fn main() {
         .build()
         .unwrap_or_else(|e| panic!("Failed to build PistonWindow: {}", e));
 
+    let assets = find_folder::Search::ParentsThenKids(3, 3)
+        .for_folder("assets").unwrap();
+        
+    println!("{:?}", assets);
+
     let mut game = Game::new();
+    let mut glyphs = window.load_font(assets.join("FiraSans-Regular.ttf")).unwrap();
 
     while let Some(e) = window.next() {
-        window.draw_2d(&e, |context, graphics, _| {
-            game.render(context.transform, graphics);
+        window.draw_2d(&e, |context, graphics, device| {
+            game.render(context, graphics, &mut glyphs);
+            glyphs.factory.encoder.flush(device);
         });
 
         if let Some(args) = e.update_args() {
