@@ -26,9 +26,13 @@ use graphics::*;
 use piston_window::*;
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::input::keyboard::Key;
-use piston::input::{Button, RenderEvent, UpdateArgs, UpdateEvent};
+use piston::input::Button::Keyboard;
+use piston::input::{RenderEvent, UpdateEvent};
 use rand::{Rng};
 use piston_window::WindowSettings;
+
+use piston_window::G2d;
+
 
 // If you change width and height also change the levelN functions
 const BOARD_WIDTH: i8 = 15;
@@ -73,7 +77,7 @@ impl Snake {
             last_pressed: key,
         }
     }
-    fn render(&self, t: math::Matrix2d, gfx: &mut GlGraphics) {
+    fn render(&self, t: math::Matrix2d, gfx: &mut G2d) {
         for p in self.tail.iter() {
             rectangle(
                 color::hex("8ba673"),
@@ -226,7 +230,7 @@ impl Food {
         }
     }
 
-    fn render(&self, t: math::Matrix2d, gfx: &mut GlGraphics) {
+    fn render(&self, t: math::Matrix2d, gfx: &mut G2d) {
         if self.life_time - self.lived_time < 6 && self.lived_time % 2 == 0 {
             return;
         }
@@ -343,7 +347,7 @@ impl Game {
         }
     }
 
-    fn render(&mut self, t: math::Matrix2d, gfx: &mut GlGraphics) {
+    fn render(&mut self, t: math::Matrix2d, gfx: &mut G2d) {
         if self.state == State::GameOver {
             clear(color::hex("000000"), gfx);
             return;
@@ -415,18 +419,14 @@ fn main() {
         .build()
         .unwrap_or_else(|e| { panic!("Failed to build PistonWindow: {}", e) });
 
-    let mut gfx = GlGraphics::new(OpenGL::V3_2);
     let mut game = Game::new();
 
     while let Some(e) = window.next() {
-        use piston::input::Button::Keyboard;
 
-        if let Some(args) = e.render_args()
-        {
-            let t = Context::new_viewport(args.viewport()).transform;
-            game.render(t, &mut gfx);
-        }
-        
+        window.draw_2d(&e, |context, graphics, _| {
+            game.render(context.transform, graphics);
+        });
+
         if let Some(args) = e.update_args() {
             game.update(args.dt);
         }
