@@ -14,27 +14,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 extern crate glutin_window;
-extern crate piston_window;
 extern crate graphics;
 extern crate opengl_graphics;
 extern crate piston;
+extern crate piston_window;
 extern crate rand;
 
 use std::collections::VecDeque;
 
 use graphics::*;
-use piston_window::*;
-use opengl_graphics::{GlGraphics, OpenGL};
 use piston::input::keyboard::Key;
 use piston::input::Button::Keyboard;
-use piston::input::{RenderEvent, UpdateEvent};
-use rand::{Rng};
-use piston_window::WindowSettings;
-
+use piston::input::UpdateEvent;
 use piston_window::G2d;
+use piston_window::WindowSettings;
+use piston_window::*;
+use rand::Rng;
 
-
-// If you change width and height also change the levelN functions
 const BOARD_WIDTH: i8 = 15;
 const BOARD_HEIGHT: i8 = 15;
 const TILE_SIZE: f64 = 50.0;
@@ -88,14 +84,14 @@ impl Snake {
         }
     }
 
-    fn key_press(&mut self, k: Key) {
+    fn key_press(&mut self, key: Key) {
         use piston::input::keyboard::Key::*;
-        match k {
-            Right | Down | Left | Up if reverse_direction(k) != self.last_pressed => {
-                self.keys.push_back(k);
-                self.last_pressed = k;
-            },
-            _ => {},
+        match key {
+            Right | Down | Left | Up if reverse_direction(key) != self.last_pressed => {
+                self.keys.push_back(key);
+                self.last_pressed = key;
+            }
+            _ => {}
         }
     }
 
@@ -146,11 +142,13 @@ impl Snake {
             g.snake.keys.push_back(g.snake.last_pressed);
         }
         let k = g.snake.keys.pop_front().unwrap();
-        Snake::mv(g, match k {
-            Right =>  Point{x: 1, y: 0},
-            Down => Point{x: 0, y: 1},
-            Left => Point{x: -1, y: 0},
-            Up => Point{x: 0, y: -1},
+        Snake::mv(
+            g,
+            match k {
+                Right => Point { x: 1, y: 0 },
+                Down => Point { x: 0, y: 1 },
+                Left => Point { x: -1, y: 0 },
+                Up => Point { x: 0, y: -1 },
                 _ => panic!("only UP/DOWN/LEFT/UP arrows allowed"),
             },
         )
@@ -349,7 +347,7 @@ impl Game {
 
     fn render(&mut self, t: math::Matrix2d, gfx: &mut G2d) {
         if self.state == State::GameOver {
-            clear(color::hex("000000"), gfx);
+            clear(color::hex("330011"), gfx);
             return;
         }
 
@@ -399,13 +397,13 @@ impl Game {
                 self.food = vec![];
                 self.score = 0;
                 return;
-            },
+            }
             (Key::P, State::Playing) => {
                 self.state = State::Paused;
-            },
+            }
             (Key::P, State::Paused) => {
                 self.state = State::Playing;
-            },
+            }
             _ => {
                 self.snake.key_press(key);
             }
@@ -414,15 +412,18 @@ impl Game {
 }
 
 fn main() {
-    let mut window: PistonWindow = WindowSettings::new("Hello Piston!", (640, 480))
+    let window_width : u32 = BOARD_WIDTH as u32 * 50;
+    let window_height : u32 = BOARD_HEIGHT as u32 * 50;
+
+    let mut window: PistonWindow = WindowSettings::new("Hello Piston!", (window_width, window_height))
         .exit_on_esc(true)
+        .resizable(false)
         .build()
-        .unwrap_or_else(|e| { panic!("Failed to build PistonWindow: {}", e) });
+        .unwrap_or_else(|e| panic!("Failed to build PistonWindow: {}", e));
 
     let mut game = Game::new();
 
     while let Some(e) = window.next() {
-
         window.draw_2d(&e, |context, graphics, _| {
             game.render(context.transform, graphics);
         });
@@ -434,5 +435,5 @@ fn main() {
         if let Some(Keyboard(key)) = e.press_args() {
             game.key_press(key)
         };
-    } 
+    }
 }
