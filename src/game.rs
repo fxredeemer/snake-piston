@@ -1,14 +1,14 @@
 use piston::input::keyboard::Key;
 use piston_window::G2d;
-use piston_window::*;
 use piston_window::Glyphs;
+use piston_window::*;
 
-use crate::state::*;
-use crate::snake::*;
-use crate::point::*;
-use crate::food::*;
 use crate::consts::*;
+use crate::food::*;
 use crate::level::*;
+use crate::point::*;
+use crate::snake::*;
+use crate::state::*;
 
 pub struct Game {
     pub snake: Snake,
@@ -38,22 +38,40 @@ impl Game {
 
     pub fn render(&mut self, context: Context, graphics: &mut G2d, glyphs: &mut Glyphs) {
         let transform = context.transform.trans(BORDER, BORDER);
-        
+
         if self.state == State::GameOver {
             clear(color::hex("220011"), graphics);
 
-            text::Text::new_color(color::hex("11AAFF"), 32).draw(
-                "Game Over! Press 'R' to restart",
-                glyphs,
-                &context.draw_state,
-                context.transform.trans(10.0, 100.0),
-                graphics
-            ).unwrap();
-
+            text::Text::new_color(color::hex("11AAFF"), 32)
+                .draw(
+                    "Game Over! Press 'R' to restart",
+                    glyphs,
+                    &context.draw_state,
+                    context.transform.trans(10.0, 100.0),
+                    graphics,
+                )
+                .unwrap();
             return;
         }
 
-        clear(color::hex("001122"), graphics);
+        clear(color::hex("112233"), graphics);
+
+        let frame = 5.0;
+        let size = TILE_SIZE * BOARD_WIDTH as f64;
+        
+        rectangle(
+            color::hex("000000"),
+            rectangle::square(-frame, -frame, size + 2.0 * frame),
+            transform,
+            graphics,
+        );
+
+        rectangle(
+            color::hex("001122"),
+            rectangle::square(0.0, 0.0, size),
+            transform,
+            graphics,
+        );
 
         for ref mut food in &self.food {
             food.render(transform, graphics);
@@ -64,7 +82,11 @@ impl Game {
         for walls in &self.walls {
             rectangle(
                 color::hex("002951"),
-                rectangle::square(walls.x as f64 * TILE_SIZE, walls.y as f64 * TILE_SIZE, TILE_SIZE),
+                rectangle::square(
+                    walls.x as f64 * TILE_SIZE,
+                    walls.y as f64 * TILE_SIZE,
+                    TILE_SIZE,
+                ),
                 transform,
                 graphics,
             );
