@@ -1,4 +1,7 @@
 # Snake game using Piston
+
+![Rust](https://github.com/fxredeemer/snake-piston/workflows/Rust/badge.svg)
+
 This is the classical Snake game developed with [Rust](http://rust-lang.org) using [Piston](http://www.piston.rs/).
 
 ![Screenshot](screenshot.png)
